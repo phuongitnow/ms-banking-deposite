@@ -1,0 +1,17 @@
+# VCS
+.git
+
+# Gradle caches
+.gradle
+**/build
+
+# IDE/editor
+**/.idea
+**/.vscode
+**/.DS_Store
+
+# Node/npm (if any)
+node_modules
+
+# Logs
+**/*.log

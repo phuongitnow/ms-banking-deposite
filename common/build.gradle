@@ -1,0 +1,14 @@
+plugins {
+    id 'java-library'
+}
+
+dependencies {
+    api(libs.spring.boot.starter.web)
+    api(libs.spring.boot.starter.validation)
+    api(libs.spring.boot.starter.actuator)
+
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
+    testImplementation(libs.junit.jupiter)
+}

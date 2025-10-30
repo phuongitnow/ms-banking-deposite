@@ -1,0 +1,32 @@
+plugins {
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.dependency.management)
+    id 'java'
+}
+
+dependencies {
+    implementation(project(":common"))
+
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.actuator)
+    implementation(libs.spring.boot.starter.data.jpa)
+    implementation(libs.liquibase.core)
+
+    implementation(libs.spring.kafka)
+
+    runtimeOnly(libs.postgres)
+
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.spring.boot.starter.test)
+    testImplementation(platform(libs.testcontainers.bom))
+    testImplementation 'org.testcontainers:postgresql'
+    testImplementation 'org.testcontainers:junit-jupiter'
+}
+
+bootJar {
+    archiveFileName = 'product-service.jar'
+}

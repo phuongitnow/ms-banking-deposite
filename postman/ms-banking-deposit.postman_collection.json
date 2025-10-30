@@ -1,0 +1,100 @@
+{
+  "info": {
+    "name": "ms-banking-deposit (MVP)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Postman collection for local testing via Kong with scripts"
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8000" },
+    { "key": "connectUrl", "value": "http://localhost:18083" },
+    { "key": "customerId", "value": "00000000-0000-0000-0000-000000000001" },
+    { "key": "productId", "value": "" },
+    { "key": "depositId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "1. Create Product",
+      "request": {
+        "method": "POST",
+        "header": [ {"key": "Content-Type", "value": "application/json"} ],
+        "url": {"raw": "{{baseUrl}}/api/products", "host": ["{{baseUrl}}"], "path": ["api","products"]},
+        "body": {"mode": "raw", "raw": "{\n  \"name\": \"Term-6M\",\n  \"minAmount\": 1000000,\n  \"maxAmount\": 500000000,\n  \"termInMonths\": 6,\n  \"ratePercent\": 5.5\n}"}
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200/201', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('productId', json.id || json.productId || '');",
+              "pm.test('Saved productId', function () { pm.expect(pm.collectionVariables.get('productId')).to.have.length(36); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Get Rates",
+      "request": {
+        "method": "GET",
+        "url": "{{baseUrl}}/api/rates?term=6&amount=100000000&productId={{productId}}"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {"exec": ["pm.test('Status is 200', function () { pm.response.to.have.status(200); });"], "type": "text/javascript"}
+        }
+      ]
+    },
+    {
+      "name": "3. Create Deposit Request",
+      "request": {
+        "method": "POST",
+        "header": [ {"key": "Content-Type", "value": "application/json"} ],
+        "url": "{{baseUrl}}/api/deposits",
+        "body": {"mode": "raw", "raw": "{\n  \"productId\": \"{{productId}}\",\n  \"customerId\": \"{{customerId}}\",\n  \"amount\": 10000000\n}"}
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200/201', function () { pm.expect(pm.response.code).to.be.oneOf([200,201]); });",
+              "const json = pm.response.json();",
+              "pm.collectionVariables.set('depositId', json.id || json.depositId || '');",
+              "pm.test('Saved depositId', function () { pm.expect(pm.collectionVariables.get('depositId')).to.have.length(36); });"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Approve Deposit",
+      "request": { "method": "POST", "url": "{{baseUrl}}/api/deposits/{{depositId}}/approve" },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('Status is 200/202', function () { pm.expect(pm.response.code).to.be.oneOf([200,202]); });"], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "5. Get Account",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/accounts/{{customerId}}" },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('Status is 200', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "6. Get Account Deposits",
+      "request": { "method": "GET", "url": "{{baseUrl}}/api/accounts/{{customerId}}/deposits" },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('Status is 200', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "7. Notify Test",
+      "request": { "method": "POST", "header": [{"key":"Content-Type","value":"application/json"}], "url": "{{baseUrl}}/api/notifications/test", "body": {"mode": "raw", "raw": "{\"to\":\"user@example.com\",\"subject\":\"Hello\",\"body\":\"Hi\"}"} },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('Status is 202/200', function () { pm.expect(pm.response.code).to.be.oneOf([200,202]); });"], "type": "text/javascript" } } ]
+    },
+    {
+      "name": "8. Connect: List Connectors",
+      "request": { "method": "GET", "url": "{{connectUrl}}/connectors" },
+      "event": [ { "listen": "test", "script": { "exec": ["pm.test('Status is 200', function () { pm.response.to.have.status(200); });"], "type": "text/javascript" } } ]
+    }
+  ]
+}

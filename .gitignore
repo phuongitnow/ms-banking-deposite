@@ -1,0 +1,26 @@
+# Gradle
+.gradle
+**/build/
+!**/build/libs/*.jar
+
+# IDE
+.idea
+**/.vscode
+**/*.iml
+**/.settings
+**/.project
+**/.classpath
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+**/*.log
+
+# Docker volumes
+**/pgdata
+
+# Environment
+.env.local
+

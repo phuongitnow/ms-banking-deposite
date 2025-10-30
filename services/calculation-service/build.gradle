@@ -1,0 +1,23 @@
+plugins {
+    alias(libs.plugins.spring.boot)
+    alias(libs.plugins.dependency.management)
+    id 'java'
+}
+
+dependencies {
+    implementation(project(":common"))
+
+    implementation(libs.spring.boot.starter.web)
+    implementation(libs.spring.boot.starter.validation)
+    implementation(libs.spring.boot.starter.actuator)
+
+    compileOnly(libs.lombok)
+    annotationProcessor(libs.lombok)
+
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.spring.boot.starter.test)
+}
+
+bootJar {
+    archiveFileName = 'calculation-service.jar'
+}

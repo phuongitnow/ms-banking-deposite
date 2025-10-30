@@ -1,0 +1,136 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+  connect:
+    image: debezium/connect:2.6
+    depends_on:
+      - kafka
+      - postgres
+    ports:
+      - "18083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: 1
+      CONFIG_STORAGE_TOPIC: connect_configs
+      OFFSET_STORAGE_TOPIC: connect_offsets
+      STATUS_STORAGE_TOPIC: connect_status
+      KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+
+  kong:
+    image: kong/kong-gateway:3.7
+    depends_on:
+      - postgres
+    restart: unless-stopped
+    environment:
+      KONG_DATABASE: off
+      KONG_DECLARATIVE_CONFIG: /opt/kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_LOG_LEVEL: info
+    volumes:
+      - ./kong/kong.yml:/opt/kong/kong.yml:ro
+    ports:
+      - "8000:8000"
+      - "8001:8001"
+
+  product-service:
+    build:
+      context: .
+      dockerfile: services/product-service/Dockerfile
+    image: product-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - kafka
+    ports:
+      - "8081:8081"
+
+  account-service:
+    build:
+      context: .
+      dockerfile: services/account-service/Dockerfile
+    image: account-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - postgres
+      - kafka
+    ports:
+      - "8082:8082"
+
+  calculation-service:
+    build:
+      context: .
+      dockerfile: services/calculation-service/Dockerfile
+    image: calculation-service:local
+    depends_on:
+      - kafka
+    ports:
+      - "8083:8083"
+
+  notify-service:
+    build:
+      context: .
+      dockerfile: services/notify-service/Dockerfile
+    image: notify-service:local
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+    depends_on:
+      - kafka
+    ports:
+      - "8084:8084"
+
+  mock-api-service:
+    build:
+      context: .
+      dockerfile: services/mock-api-service/Dockerfile
+    image: mock-api-service:local
+    ports:
+      - "8085:8085"
+
+volumes:
+  pgdata:

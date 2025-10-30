@@ -1,0 +1,32 @@
+[versions]
+springBoot = "3.3.4"
+springDependencyManagement = "1.1.6"
+mapstruct = "1.5.5.Final"
+lombok = "1.18.32"
+postgres = "42.7.3"
+kafka = "3.7.1"
+springKafka = "3.2.3"
+liquibase = "4.29.2"
+junit = "5.10.2"
+testcontainers = "1.20.2"
+
+[libraries]
+spring-boot-starter-web = { module = "org.springframework.boot:spring-boot-starter-web", version.ref = "springBoot" }
+spring-boot-starter-validation = { module = "org.springframework.boot:spring-boot-starter-validation", version.ref = "springBoot" }
+spring-boot-starter-data-jpa = { module = "org.springframework.boot:spring-boot-starter-data-jpa", version.ref = "springBoot" }
+spring-boot-starter-actuator = { module = "org.springframework.boot:spring-boot-starter-actuator", version.ref = "springBoot" }
+spring-kafka = { module = "org.springframework.kafka:spring-kafka", version.ref = "springKafka" }
+mapstruct = { module = "org.mapstruct:mapstruct", version.ref = "mapstruct" }
+mapstruct-processor = { module = "org.mapstruct:mapstruct-processor", version.ref = "mapstruct" }
+lombok = { module = "org.projectlombok:lombok", version.ref = "lombok" }
+postgres = { module = "org.postgresql:postgresql", version.ref = "postgres" }
+liquibase-core = { module = "org.liquibase:liquibase-core", version.ref = "liquibase" }
+junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+
+spring-boot-starter-test = { module = "org.springframework.boot:spring-boot-starter-test", version.ref = "springBoot" }
+
+testcontainers-bom = { module = "org.testcontainers:testcontainers-bom", version.ref = "testcontainers" }
+
+[plugins]
+spring-boot = { id = "org.springframework.boot", version.ref = "springBoot" }
+dependency-management = { id = "io.spring.dependency-management", version.ref = "springDependencyManagement" }

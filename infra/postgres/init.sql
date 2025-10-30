@@ -1,0 +1,7 @@
+CREATE USER product WITH ENCRYPTED PASSWORD 'product';
+CREATE DATABASE product_db OWNER product;
+GRANT ALL PRIVILEGES ON DATABASE product_db TO product;
+
+CREATE USER account WITH ENCRYPTED PASSWORD 'account';
+CREATE DATABASE account_db OWNER account;
+GRANT ALL PRIVILEGES ON DATABASE account_db TO account;

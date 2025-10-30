@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-1
+      author: mvp
+      changes:
+        - createTable:
+            tableName: outbox_event
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: aggregate_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: aggregate_id, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: event_type, type: varchar(150), constraints: { nullable: false } }
+              - column: { name: payload, type: text, constraints: { nullable: false } }
+              - column: { name: occurred_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
+        - createIndex:
+            indexName: idx_outbox_event_type_time
+            tableName: outbox_event
+            columns:
+              - column: { name: event_type }
+              - column: { name: occurred_at }
+

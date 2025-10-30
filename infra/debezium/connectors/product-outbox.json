@@ -1,0 +1,24 @@
+{
+  "name": "product-outbox-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "postgres",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "postgres",
+    "database.dbname": "product_db",
+    "database.server.name": "product",
+    "topic.prefix": "product",
+    "tombstones.on.delete": "false",
+    "plugin.name": "pgoutput",
+    "table.include.list": "public.outbox_event",
+    "transforms": "route",
+    "transforms.route.type": "io.debezium.transforms.outbox.EventRouter",
+    "transforms.route.table.fields.additional.placement": "event_type:header:eventType",
+    "transforms.route.route.by.field": "event_type",
+    "transforms.route.route.topic.regex": ".*",
+    "key.converter.schemas.enable": "false",
+    "value.converter.schemas.enable": "false"
+  }
+}
+

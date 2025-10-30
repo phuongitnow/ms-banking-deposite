@@ -1,0 +1,11 @@
+rootProject.name = "ms-banking-deposit"
+
+include(
+    "common",
+    "services:product-service",
+    "services:account-service",
+    "services:calculation-service",
+    "services:notify-service",
+    "services:mock-api-service"
+)
+
