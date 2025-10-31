@@ -1,43 +1,54 @@
 _format_version: "3.0"
-_transform: true
 
 services:
   - name: product-service
     url: http://product-service:8081
     routes:
-      - name: product-api-products
+      - name: product-route
         paths:
           - /api/products
         strip_path: false
-      - name: product-api-deposits
+      - name: product-id-route
+        paths:
+          - /api/products/
+        strip_path: false
+  - name: deposit-service
+    url: http://product-service:8081
+    routes:
+      - name: deposit-route
         paths:
           - /api/deposits
+        strip_path: false
+      - name: deposit-action-route
+        paths:
+          - /api/deposits/
         strip_path: false
   - name: account-service
     url: http://account-service:8082
     routes:
-      - name: account-api
+      - name: account-route
         paths:
           - /api/accounts
+        strip_path: false
+      - name: account-sub-route
+        paths:
+          - /api/accounts/
         strip_path: false
   - name: calculation-service
     url: http://calculation-service:8083
     routes:
-      - name: calc-api
+      - name: calc-route
         paths:
           - /api/rates
-        strip_path: false
   - name: notify-service
     url: http://notify-service:8084
     routes:
-      - name: notify-api
+      - name: notify-route
         paths:
           - /api/notifications
-        strip_path: false
   - name: mock-api-service
     url: http://mock-api-service:8085
     routes:
-      - name: mock-api
+      - name: mock-route
         paths:
           - /api/mock
-        strip_path: false

@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 010-1
+      id: "010-1"
       author: mvp
       changes:
         - createTable:

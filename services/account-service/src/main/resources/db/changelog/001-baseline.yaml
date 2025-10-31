@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 001-1
+      id: "001-1"
       author: mvp
       changes:
         - createTable:
@@ -8,7 +8,7 @@ databaseChangeLog:
             columns:
               - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
               - column: { name: customer_id, type: uuid, constraints: { nullable: false } }
-              - column: { name: balance, type: numeric(18,2), constraints: { nullable: false } }
+              - column: { name: balance, type: "numeric(18,2)", constraints: { nullable: false } }
               - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
         - createTable:
             tableName: account_deposit
@@ -17,7 +17,7 @@ databaseChangeLog:
               - column: { name: account_id, type: uuid, constraints: { nullable: false } }
               - column: { name: deposit_id, type: uuid, constraints: { nullable: false } }
               - column: { name: product_id, type: uuid, constraints: { nullable: false } }
-              - column: { name: amount, type: numeric(18,2), constraints: { nullable: false } }
+              - column: { name: amount, type: "numeric(18,2)", constraints: { nullable: false } }
               - column: { name: status, type: varchar(30), constraints: { nullable: false } }
               - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
         - addForeignKeyConstraint:

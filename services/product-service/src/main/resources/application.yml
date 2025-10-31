@@ -32,6 +32,6 @@ spring:
     url: jdbc:postgresql://postgres:5432/product_db
     username: product
     password: product
-kafka:
-  bootstrap-servers: kafka:9092
+  kafka:
+    bootstrap-servers: kafka:9092
 

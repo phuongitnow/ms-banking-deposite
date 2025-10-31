@@ -32,6 +32,6 @@ spring:
     url: jdbc:postgresql://postgres:5432/account_db
     username: account
     password: account
-kafka:
-  bootstrap-servers: kafka:9092
+  kafka:
+    bootstrap-servers: kafka:9092
 

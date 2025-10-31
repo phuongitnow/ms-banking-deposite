@@ -2,23 +2,38 @@
   "info": {
     "name": "ms-banking-deposit (MVP) - E2E",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "description": "Collection test qua Kong với scripts tự động lưu ID và chuỗi E2E"
+    "description": "Collection test qua Kong với scripts tự động lưu ID, chain E2E và polling read-model. V2: Fixed Kafka consumer group và auto-poll."
   },
   "variable": [
     { "key": "baseUrl", "value": "http://localhost:8000" },
     { "key": "connectUrl", "value": "http://localhost:18083" },
     { "key": "customerId", "value": "00000000-0000-0000-0000-000000000001" },
     { "key": "productId", "value": "" },
-    { "key": "depositId", "value": "" }
+    { "key": "depositId", "value": "" },
+    { "key": "pollMax", "value": "6" },
+    { "key": "pollWaitMs", "value": "1500" },
+    { "key": "pollCount", "value": "0" }
   ],
   "item": [
+    {
+      "name": "0. Setup - Check Services",
+      "event": [
+        { "listen": "test", "script": { "type": "text/javascript", "exec": [
+          "pm.test('Setup complete', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201,404]); });",
+          "console.log('Starting E2E test flow...');",
+          "postman.setNextRequest('1. Create Product');"
+        ] } }
+      ],
+      "request": { "method": "GET", "url": "{{baseUrl}}/actuator/health" }
+    },
     {
       "name": "1. Create Product",
       "event": [
         {
           "listen": "prerequest",
           "script": { "type": "text/javascript", "exec": [
-            "pm.variables.set('prodName', 'Term-6M');"
+            "pm.variables.set('prodName', 'Term-6M');",
+            "console.log('Creating product...');"
           ] }
         },
         {
@@ -28,6 +43,7 @@
             "let json={}; try{ json=pm.response.json(); }catch(e){}",
             "pm.collectionVariables.set('productId', json.id || json.productId || '');",
             "pm.test('productId saved', function(){ pm.expect(pm.collectionVariables.get('productId')).to.have.length(36); });",
+            "console.log('Product ID:', pm.collectionVariables.get('productId'));",
             "postman.setNextRequest('2. Get Rates');"
           ] }
         }
@@ -44,6 +60,8 @@
       "event": [
         { "listen": "test", "script": { "type": "text/javascript", "exec": [
           "pm.test('Status 200', function(){ pm.response.to.have.status(200); });",
+          "let json={}; try{ json=pm.response.json(); }catch(e){}",
+          "console.log('Estimated interest:', json.estimatedInterest);",
           "postman.setNextRequest('3. Create Deposit Request');"
         ] } }
       ],
@@ -57,6 +75,7 @@
           "let json={}; try{ json=pm.response.json(); }catch(e){}",
           "pm.collectionVariables.set('depositId', json.id || json.depositId || '');",
           "pm.test('depositId saved', function(){ pm.expect(pm.collectionVariables.get('depositId')).to.have.length(36); });",
+          "console.log('Deposit ID:', pm.collectionVariables.get('depositId'));",
           "postman.setNextRequest('4. Approve Deposit');"
         ] } }
       ],
@@ -72,17 +91,36 @@
       "event": [
         { "listen": "test", "script": { "type": "text/javascript", "exec": [
           "pm.test('Status 200/202', function(){ pm.expect(pm.response.code).to.be.oneOf([200,202]); });",
-          "postman.setNextRequest('5. Get Account');"
+          "pm.collectionVariables.set('pollCount','0');",
+          "console.log('Deposit approved, waiting for eventual consistency...');",
+          "postman.setNextRequest('5. Poll Account until exists');"
         ] } }
       ],
       "request": { "method": "POST", "url": "{{baseUrl}}/api/deposits/{{depositId}}/approve" }
     },
     {
-      "name": "5. Get Account",
+      "name": "5. Poll Account until exists",
       "event": [
         { "listen": "test", "script": { "type": "text/javascript", "exec": [
-          "pm.test('Status 200', function(){ pm.response.to.have.status(200); });",
-          "postman.setNextRequest('6. Get Account Deposits');"
+          "const s=pm.response.code;",
+          "let cnt=parseInt(pm.collectionVariables.get('pollCount')||'0',10);",
+          "const max=parseInt(pm.collectionVariables.get('pollMax')||'6',10);",
+          "if(s===200){",
+          "  pm.test('Account available', function(){ pm.response.to.have.status(200); });",
+          "  console.log('Account found after', cnt, 'poll(s)');",
+          "  postman.setNextRequest('6. Get Account Deposits');",
+          "}",
+          "else if(cnt<max){",
+          "  cnt++;",
+          "  pm.collectionVariables.set('pollCount', String(cnt));",
+          "  console.log('Poll attempt', cnt, '/', max);",
+          "  setTimeout(()=>postman.setNextRequest('5. Poll Account until exists'), parseInt(pm.collectionVariables.get('pollWaitMs')||'1500',10));",
+          "}",
+          "else {",
+          "  pm.test('Eventual consistency timeout', function(){ pm.expect(false, 'Account not ready after '+max+' polls').to.be.true; });",
+          "  console.error('Timeout: Account not ready');",
+          "  postman.setNextRequest(null);",
+          "}"
         ] } }
       ],
       "request": { "method": "GET", "url": "{{baseUrl}}/api/accounts/{{customerId}}" }
@@ -92,6 +130,13 @@
       "event": [
         { "listen": "test", "script": { "type": "text/javascript", "exec": [
           "pm.test('Status 200', function(){ pm.response.to.have.status(200); });",
+          "let json={}; try{ json=pm.response.json(); }catch(e){}",
+          "if(Array.isArray(json) && json.length>0){",
+          "  console.log('Found', json.length, 'deposit(s)');",
+          "  pm.test('Deposits exist', function(){ pm.expect(json.length).to.be.above(0); });",
+          "} else {",
+          "  console.warn('No deposits found - eventual consistency issue');",
+          "}",
           "postman.setNextRequest(null);"
         ] } }
       ],
@@ -115,7 +160,18 @@
       "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [
         "pm.test('Status 200', function(){ pm.response.to.have.status(200); });"
       ] } } ]
+    },
+    {
+      "name": "8b. Connect: Update Outbox Connector",
+      "request": {
+        "method": "PUT",
+        "header": [ { "key": "Content-Type", "value": "application/json" } ],
+        "url": "{{connectUrl}}/connectors/product-outbox-connector/config",
+        "body": { "mode": "raw", "raw": "{\n  \"connector.class\": \"io.debezium.connector.postgresql.PostgresConnector\",\n  \"database.hostname\": \"postgres\",\n  \"database.port\": \"5432\",\n  \"database.user\": \"postgres\",\n  \"database.password\": \"postgres\",\n  \"database.dbname\": \"product_db\",\n  \"database.server.name\": \"product\",\n  \"topic.prefix\": \"product\",\n  \"tombstones.on.delete\": \"false\",\n  \"plugin.name\": \"pgoutput\",\n  \"table.include.list\": \"public.outbox_event\",\n  \"transforms\": \"route\",\n  \"transforms.route.type\": \"io.debezium.transforms.outbox.EventRouter\",\n  \"transforms.route.table.fields.additional.placement\": \"event_type:header:eventType\",\n  \"transforms.route.route.by.field\": \"event_type\",\n  \"transforms.route.route.topic.regex\": \"(.*)\",\n  \"transforms.route.route.topic.replacement\": \"$1\",\n  \"transforms.route.table.field.event.key\": \"aggregate_id\",\n  \"key.converter.schemas.enable\": \"false\",\n  \"value.converter.schemas.enable\": \"false\"\n}" }
+      },
+      "event": [ { "listen": "test", "script": { "type": "text/javascript", "exec": [
+        "pm.test('Updated 200', function(){ pm.expect(pm.response.code).to.be.oneOf([200,201]); });"
+      ] } } ]
     }
   ]
 }
-

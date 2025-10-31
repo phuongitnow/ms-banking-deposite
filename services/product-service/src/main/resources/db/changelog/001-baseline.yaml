@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 001-1
+      id: "001-1"
       author: mvp
       changes:
         - createTable:
@@ -8,10 +8,10 @@ databaseChangeLog:
             columns:
               - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
               - column: { name: name, type: varchar(200), constraints: { nullable: false } }
-              - column: { name: min_amount, type: numeric(18,2), constraints: { nullable: false } }
-              - column: { name: max_amount, type: numeric(18,2), constraints: { nullable: false } }
+              - column: { name: min_amount, type: "numeric(18,2)", constraints: { nullable: false } }
+              - column: { name: max_amount, type: "numeric(18,2)", constraints: { nullable: false } }
               - column: { name: term_in_months, type: int, constraints: { nullable: false } }
-              - column: { name: rate_percent, type: numeric(5,3), constraints: { nullable: false } }
+              - column: { name: rate_percent, type: "numeric(5,3)", constraints: { nullable: false } }
               - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
         - createTable:
             tableName: deposit_request
@@ -19,7 +19,7 @@ databaseChangeLog:
               - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
               - column: { name: product_id, type: uuid, constraints: { nullable: false } }
               - column: { name: customer_id, type: uuid, constraints: { nullable: false } }
-              - column: { name: amount, type: numeric(18,2), constraints: { nullable: false } }
+              - column: { name: amount, type: "numeric(18,2)", constraints: { nullable: false } }
               - column: { name: status, type: varchar(30), constraints: { nullable: false } }
               - column: { name: created_at, type: timestamp, defaultValueComputed: CURRENT_TIMESTAMP }
         - addForeignKeyConstraint:

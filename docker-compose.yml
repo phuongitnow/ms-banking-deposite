@@ -14,6 +14,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - banking
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.6.1
@@ -22,6 +24,8 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - "2181:2181"
+    networks:
+      - banking
 
   kafka:
     image: confluentinc/cp-kafka:7.6.1
@@ -37,6 +41,8 @@ services:
       KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,PLAINTEXT_HOST://0.0.0.0:29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - banking
 
   connect:
     image: debezium/connect:2.6
@@ -56,6 +62,8 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
+    networks:
+      - banking
 
   kong:
     image: kong/kong-gateway:3.7
@@ -75,6 +83,8 @@ services:
     ports:
       - "8000:8000"
       - "8001:8001"
+    networks:
+      - banking
 
   product-service:
     build:
@@ -88,6 +98,8 @@ services:
       - kafka
     ports:
       - "8081:8081"
+    networks:
+      - banking
 
   account-service:
     build:
@@ -101,6 +113,8 @@ services:
       - kafka
     ports:
       - "8082:8082"
+    networks:
+      - banking
 
   calculation-service:
     build:
@@ -111,6 +125,8 @@ services:
       - kafka
     ports:
       - "8083:8083"
+    networks:
+      - banking
 
   notify-service:
     build:
@@ -123,6 +139,8 @@ services:
       - kafka
     ports:
       - "8084:8084"
+    networks:
+      - banking
 
   mock-api-service:
     build:
@@ -131,6 +149,12 @@ services:
     image: mock-api-service:local
     ports:
       - "8085:8085"
+    networks:
+      - banking
 
 volumes:
   pgdata:
+
+networks:
+  banking:
+    driver: bridge
